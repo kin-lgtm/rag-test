@@ -1,46 +1,46 @@
-"""Load documents from various sources"""
 import os
-from typing import List
-from langchain.document_loaders import PyPDFLoader, TextLoader, DirectoryLoader
-from langchain.schema import Document
+from pathlib import Path
+from pypdf import PdfReader
 
-def load_pdfs(pdf_directory: str) -> List[Document]:
-    """Load all PDF files from a directory"""
-    print(f"Loading PDFs from {pdf_directory}...")
+class DocumentLoader:
+    def __init__(self, data_folder="data"):
+        self.data_folder = data_folder
     
-    if not os.path.exists(pdf_directory):
-        print(f"Directory {pdf_directory} does not exist. Skipping PDFs.")
-        return []
+    def load_txt(self, filepath):
+        """Load text file"""
+        with open(filepath, 'r', encoding='utf-8') as f:
+            return f.read()
     
-    loader = DirectoryLoader(
-        pdf_directory,
-        glob="**/*.pdf",
-        loader_cls=PyPDFLoader
-    )
-    documents = loader.load()
-    print(f"Loaded {len(documents)} PDF pages")
-    return documents
-
-def load_text_files(text_directory: str) -> List[Document]:
-    """Load all text files from a directory"""
-    print(f"Loading text files from {text_directory}...")
+    def load_pdf(self, filepath):
+        """Load PDF file"""
+        reader = PdfReader(filepath)
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text() + "\n"
+        return text
     
-    if not os.path.exists(text_directory):
-        print(f"Directory {text_directory} does not exist. Skipping text files.")
-        return []
-    
-    loader = DirectoryLoader(
-        text_directory,
-        glob="**/*.txt",
-        loader_cls=TextLoader
-    )
-    documents = loader.load()
-    print(f"Loaded {len(documents)} text files")
-    return documents
-
-def load_all_documents(pdf_dir: str, text_dir: str) -> List[Document]:
-    """Load all documents from both directories"""
-    all_docs = []
-    all_docs.extend(load_pdfs(pdf_dir))
-    all_docs.extend(load_text_files(text_dir))
-    return all_docs
+    def load_all_documents(self):
+        """Load all documents from data folder"""
+        documents = []
+        data_path = Path(self.data_folder)
+        
+        for file in data_path.rglob("*"):
+            if file.is_file():
+                try:
+                    if file.suffix == ".txt":
+                        content = self.load_txt(file)
+                    elif file.suffix == ".pdf":
+                        content = self.load_pdf(file)
+                    else:
+                        continue
+                    
+                    documents.append({
+                        "content": content,
+                        "source": str(file),
+                        "filename": file.name
+                    })
+                    print(f"✓ Loaded: {file.name}")
+                except Exception as e:
+                    print(f"✗ Error loading {file.name}: {e}")
+        
+        return documents
