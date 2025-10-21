@@ -1,0 +1,16 @@
+# Core Dependencies
+langchain==0.1.0
+openai==1.6.1
+chromadb==0.4.22
+fastapi==0.109.0
+uvicorn==0.27.0
+python-dotenv==1.0.0
+
+# Document Processing
+pypdf==3.17.4
+beautifulsoup4==4.12.3
+requests==2.31.0
+
+# Optional but recommended
+pydantic==2.5.3
+python-multipart==0.0.6
